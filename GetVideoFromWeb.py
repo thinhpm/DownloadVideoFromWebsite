@@ -40,6 +40,21 @@ class GetVideoFromWeb:
 
 
 class PhimBatHu(GetVideoFromWeb):
+    def getMainContentFromUrl(self, url):
+        url = url + '/xem-phim.html'
+
+        content = self.getContentFromUrl("GET", url)
+
+        return content
+
+    def getContentFromData(self, data):
+        url = "https://phimbathutv.com/ajax"
+        method = "POST"
+
+        content = self.getContentFromUrl(method, url, data)
+
+        return content
+
     def getSourceVideoFromContent(self, content):
         arr_file = self.getDataByRegex(content, r'\"file\": \"(.*?)\"')
         len_file = len(arr_file)
@@ -56,20 +71,23 @@ class PhimBatHu(GetVideoFromWeb):
 
         return arr_file[1]
 
-    def getDataForFindSourceVideo(self, url):
+    def getDataForFindSourceVideo(self, content, url):
         next_episode = ''
         episode_id = ''
-        content = self.getContentFromUrl("GET", url)
 
         film_id = self.getFilmId(url)
         episode = self.getEpisodeID(content)
+
         if len(episode) > 0:
             next_episode = episode[1]
             episode_id = episode[0]
 
-        print(film_id)
-        print(episode_id)
-        print(next_episode)
+        return {
+            'filmID': film_id,
+            'EpisodeID': episode_id,
+            'NextEpisode': 1,
+            'playTech': 'auto'
+        }
 
     def getEpisodeID(self, content):
         root = self.buildXpathFromContent(content)
@@ -91,3 +109,39 @@ class PhimBatHu(GetVideoFromWeb):
         arr = string_text.split("-")
 
         return arr[len(arr) - 1]
+
+    def getInfoMovie(self, content):
+        title = ''
+        description = ''
+        eps = ''
+        tags = ''
+
+        root = self.buildXpathFromContent(content)
+
+        title = root.xpath("//*[@id=\"body-wrapper\"]/div/div/div[2]/div[1]/div/div[4]/div[1]/h2/text()")
+
+        if len(title) > 0:
+            title = title[0]
+
+        description = root.xpath("//*[@id=\"body-wrapper\"]/div/div/div[2]/div[1]/div/div[4]/dl/dd[2]/text()")
+
+        if len(description) > 0:
+            description = description[0]
+
+        li = root.xpath("//*[@id=\"body-wrapper\"]/div/div/div[2]/div[6]/div[1]/div[2]/ul/li")
+
+        eps = li[len(li) - 1].xpath("a/@title")
+
+        if len(eps) > 0:
+            eps = eps[0]
+
+        tags = root.xpath("//*[@id=\"body-wrapper\"]/div/div/div[2]/div[6]/div[3]/a/text()")
+
+        tags = ",".join(tags)
+
+        return {
+            "title": title,
+            "des": description,
+            "eps": eps,
+            "tags": tags
+        }

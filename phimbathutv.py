@@ -1,18 +1,16 @@
 from GetVideoFromWeb import GetVideoFromWeb as MainWeb
-from GetVideoFromWeb import PhimBatHu as pbh
+from GetVideoFromWeb import PhimBatHu
 
 
 if __name__=='__main__':
-    main = pbh()
-    url = "https://phimbathutv.com/ajax"
-    method = "POST"
-    data = {
-        "NextEpisode": 1,
-        "EpisodeID": 131909,
-        "filmID": 9518,
-        "playTech": "auto"
-    }
+    pbh = PhimBatHu()
 
-    # content = main.getContentFromUrl(method, url, data)
-    # arr_file = main.getSourceVideoFromContent(content)
-    main.getDataForFindSourceVideo("https://phimbathutv.com/phim/nguoi-dep-gangnam-9518/xem-phim.html")
+    url = "https://phimbathutv.com/phim/vuong-hau-cuoi-cung-9486/"
+    main_content = pbh.getMainContentFromUrl(url)
+    info = pbh.getInfoMovie(main_content)
+    data = pbh.getDataForFindSourceVideo(main_content, url)
+    content = pbh.getContentFromData(data)
+    source_video = pbh.getSourceVideoFromContent(content)
+
+    print(info)
+    print(source_video)
