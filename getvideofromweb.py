@@ -4,6 +4,7 @@ import re
 from lxml import html
 from bs4 import BeautifulSoup
 import json
+import requests
 
 
 class GetVideoFromWeb:
@@ -37,6 +38,16 @@ class GetVideoFromWeb:
         data = json.loads(content)
 
         return data
+
+    def downloadVideoFormatMp4(self, url, file_name):
+        r = requests.get(url, stream=True)
+
+        with open(str(file_name), 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 1024):
+                if chunk:
+                    f.write(chunk)
+
+        return True
 
 
 class PhimBatHu(GetVideoFromWeb):
@@ -145,3 +156,33 @@ class PhimBatHu(GetVideoFromWeb):
             "eps": eps,
             "tags": tags
         }
+
+    def downloadVideo(self, content, file_name):
+        source_video = self.getSourceVideoFromContent(content)
+
+        if source_video == '':
+            return ''
+
+        if source_video.find('.m3u8') > 0:
+            print("File m3u8")
+            return ''
+
+        is_download = self.downloadVideoFormatMp4(source_video, file_name)
+
+        if is_download is False:
+            return ''
+
+        return file_name
+
+
+class BiluTV(GetVideoFromWeb):
+
+    def getMainContentFromUrl(self, url):
+        url = url + '/xem-phim.html'
+
+        content = self.getContentFromUrl("GET", url)
+
+        return content
+
+    def getDataForFindSourceVideo(self, content):
+        print(content)
